@@ -1,10 +1,11 @@
-import { useParams } from 'react-router-dom'
+import { useState, useContext } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import fetchPet from './fetchPet'
 import Carousel from './Carousel'
 import ErrorBoundary from './ErrorBoundary'
 import Modal from './Modal'
-import { useState } from 'react'
+import AdoptedPetContext from './AdoptedPetContext'
 
 const Details = () => {
   // Pulls the id from router
@@ -13,6 +14,10 @@ const Details = () => {
   const results = useQuery(['details', id], fetchPet)
 
   const [showModal, setShowModal] = useState(false)
+
+  // if pet is adopted, update the AdptedPet and redirect to home page
+  const navigate = useNavigate()
+  const [, setAdoptedPet] = useContext(AdoptedPetContext)
 
   if (results.isLoading) {
     return (
@@ -39,7 +44,14 @@ const Details = () => {
               <div>
                 <h1>Would you like to adopt {pet.name}? </h1>
                 <div className="buttons">
-                  <button>Yes</button>
+                  <button
+                    onClick={() => {
+                      setAdoptedPet(pet)
+                      navigate('/')
+                    }}
+                  >
+                    Yes
+                  </button>
                   <button onClick={() => setShowModal(false)}>No</button>
                 </div>
               </div>
