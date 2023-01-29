@@ -1,51 +1,38 @@
-import {
-  useContext,
-  useState,
-  useDeferredValue,
-  useMemo,
-  useTransition,
-} from 'react'
+import { useContext, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Results from './Results'
 import AdoptedPetContext from './AdoptedPetContext'
 import useBreedList from './useBreedList'
 import fetchSearch from './fetchSearch'
-const ANIMALS = ['bird', 'cat', 'dog', 'rabbit', 'reptile']
+import { Animal } from './APIResonsesTypes'
+const ANIMALS: Animal[] = ['bird', 'cat', 'dog', 'rabbit', 'reptile']
 
 const SearchParams = () => {
   const [requestParams, setRequestParams] = useState({
     location: '',
-    animal: '',
+    animal: '' as Animal,
     breed: '',
   })
   const [adoptedPet] = useContext(AdoptedPetContext)
-  const [animal, setAnimal] = useState('')
+  const [animal, setAnimal] = useState('' as Animal)
   const [breeds] = useBreedList(animal)
-  const [isPending, startTransition] = useTransition()
 
   const results = useQuery(['search', requestParams], fetchSearch)
   const pets = results?.data?.pets ?? []
-  const defferedPets = useDeferredValue(pets)
-  const renderedPets = useMemo(
-    () => <Results pets={defferedPets} />,
-    [defferedPets]
-  )
 
   return (
     <div className="search-params">
       <form
         onSubmit={(e) => {
           e.preventDefault()
-          const formData = new FormData(e.target)
+          const formData = new FormData(e.currentTarget)
           const obj = {
-            animal: formData.get('animal') ?? '',
-            breed: formData.get('breed') ?? '',
-            location: formData.get('location') ?? '',
+            animal:
+              (formData.get('animal')?.toString() as Animal) ?? ('' as Animal),
+            breed: formData.get('breed')?.toString() ?? '',
+            location: formData.get('location')?.toString() ?? '',
           }
-          // Whatever happened inside the transition is low priority, can be interrupted
-          startTransition(() => {
-            setRequestParams(obj)
-          })
+          setRequestParams(obj)
         }}
       >
         {adoptedPet ? (
@@ -64,10 +51,10 @@ const SearchParams = () => {
             id="animal"
             name="animal"
             onChange={(e) => {
-              setAnimal(e.target.value)
+              setAnimal(e.currentTarget.value as Animal)
             }}
             onBlur={(e) => {
-              setAnimal(e.target.value)
+              setAnimal(e.currentTarget.value as Animal)
             }}
           >
             <option />
@@ -91,15 +78,9 @@ const SearchParams = () => {
           </select>
         </label>
 
-        {isPending ? (
-          <div className="mini loading-pane">
-            <h2 className="loader">🐩</h2>
-          </div>
-        ) : (
-          <button>Submit</button>
-        )}
+        <button>Submit</button>
       </form>
-      {renderedPets}
+      <Results pets={pets} />
     </div>
   )
 }
